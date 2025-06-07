@@ -1,15 +1,17 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 from PIL import Image, ImageTk  # type: ignore
 import sqlite3 as sql
 
-# Icons/images used in this app are credited to the following: 
+# -----Credit Section----#
     #<a href="https://www.flaticon.com/free-icons/info" title="info icons">Info icons created by Vectoricons - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/add" title="add icons">Add icons created by Freepik - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/admin" title="admin icons">Admin icons created by Freepik - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/eye" title="eye icons">Eye icons created by Gregor Cresnar - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/hide" title="hide icons">Hide icons created by The Icon Tree - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/user" title="user icons">User icons created by kmg design - Flaticon</a>
+#System Inspired by Tkinterhub
 #-----------------------#
 
 app=Tk()
@@ -53,7 +55,6 @@ id_img = ImageTk.PhotoImage(user_icon)
 #Padlock ICON
 close_eye = PhotoImage(file="assets/close_eye.png")
 open_eye = PhotoImage(file="assets/open_eye.png")
-
 
 
 
@@ -266,6 +267,15 @@ def add_profile_page():
             std_pass_ent.config(show='*')
             show_icon_pass.config(image=close_eye)
 
+    #Message Box
+    def popup():
+        mssgbox = messagebox.askyesno("Confirmation", "Are you sure you want to go home?")
+        if mssgbox:
+            add_profile_fm.destroy()
+            app.update()
+            welcome_page()
+        else:
+            pass
 
 
     #Std Gender
@@ -289,6 +299,8 @@ def add_profile_page():
     add_pic_fm.place(x=10, y=10, height=125, width=125)
     add_pic_btn = Button(add_pic_fm, image=id_img, bd=0)
     add_pic_btn.pack()
+
+   
 
     #Student Name Label
     std_name_lb = Label(add_profile_fm, text='Student Name:', font=('Calibri', 15), fg=bg_color)
@@ -347,6 +359,14 @@ def add_profile_page():
 
     std_idnum = Label(add_profile_fm, text='Student ID Number:', font=('Times New Roman', 15), fg=bg_color)
     std_idnum.place(x=260, y=20)
+
+    std_idnum_ent = Entry(add_profile_fm, font=('Times New Roman', 18), fg=bg_color, bd=0)
+    std_idnum_ent.place(x=420, y=20, width=90)
+
+    std_idnum_ent.insert(END, '12345')
+    std_idnum_ent.config(state='readonly')
+
+
     #Note
     std_idnum_note = Label(add_profile_fm, text='*Automatically Generated ID Number\n Remember using this ID number\n When Logging in to account. ',
                             font=('Calibri Italic', 11), fg='grey', anchor='w', justify='left')
@@ -367,7 +387,7 @@ def add_profile_page():
 
 
     #Student Password Label
-    std_pass_lb = Label(add_profile_fm, text='Student Account Password:', font=('Calibri', 15), fg=bg_color)
+    std_pass_lb = Label(add_profile_fm, text='Create Account Password:', font=('Calibri', 15), fg=bg_color)
     std_pass_lb.place(x=260, y=310)
 
     #Student password Entry
@@ -387,7 +407,7 @@ def add_profile_page():
 
 
     #Home Button
-    home_btn = Button(add_profile_fm, text='Home', fg='white', bg='grey', font=('Bold', 12), command=home)
+    home_btn = Button(add_profile_fm, text='Home', fg='white', bg='grey', font=('Bold', 12), command=popup)
     home_btn.place(x=260, y=500)
 
     home_btn = Button(add_profile_fm, text='Submit', fg='white', bg=bg_color, font=('Bold', 12))
