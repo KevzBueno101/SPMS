@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk  # type: ignore
 import sqlite3 as sql
 
@@ -11,7 +12,7 @@ import sqlite3 as sql
     #<a href="https://www.flaticon.com/free-icons/eye" title="eye icons">Eye icons created by Gregor Cresnar - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/hide" title="hide icons">Hide icons created by The Icon Tree - Flaticon</a>
     #<a href="https://www.flaticon.com/free-icons/user" title="user icons">User icons created by kmg design - Flaticon</a>
-#System Inspired by Tkinterhub
+#System Inspired by Tkinterhub: https://www.youtube.com/@tkinterhub
 #-----------------------#
 
 app=Tk()
@@ -62,6 +63,22 @@ open_eye = PhotoImage(file="assets/open_eye.png")
 
 def welcome_page():
 
+    #Show info
+    def info():
+        info_msg = messagebox.showinfo("Info", """This application was inspired from Tkinter Hub
+(https://www.youtube.com/@tkinterhub)
+
+𝙳𝚎𝚟𝚎𝚕𝚘𝚙𝚎𝚍 𝚊𝚗𝚍 𝚖𝚘𝚍𝚒𝚏𝚒𝚎𝚍 𝚋𝚢 𝙺𝚎𝚟𝚒𝚗 𝙱. 𝙱𝚞𝚎𝚗𝚘.
+                                       
+Icons Credits:
+Info icon by Vectoricons - https://www.flaticon.com/free-icons/info
+Add & Admin icons by Freepik - https://www.flaticon.com/free-icons/add
+Eye icon by Gregor Cresnar - https://www.flaticon.com/free-icons/eye
+Hide icon by The Icon Tree - https://www.flaticon.com/free-icons/hide
+User icon by kmg design - https://www.flaticon.com/free-icons/user
+                                       """)
+
+ 
     ##Link to other pages
     def link_to_std_login_pg():
         wc_page.destroy()
@@ -90,6 +107,11 @@ def welcome_page():
     heading= Label(wc_page,
                     text="Welcome to Student Profile \nManagement System", bg=bg_color, fg='white', font=('Arial Bold', 15))
     heading.place(x=0, y=0, width=400)
+
+    #Info
+    info_btn = Button(app, text='ℹ️', font=('Arial Bold', 15),bd=0, command=info)
+    info_btn.place(x=12, y=555)
+
     #BUTTONS
     login_std_button = Button(wc_page, text='Login as Student', bg=bg_color, fg='white', font=('Arial Bold', 15), command=link_to_std_login_pg)
     login_std_button.place(x=120, y=125, width=200)
@@ -253,6 +275,22 @@ def admin_login_page():
 
 def add_profile_page():
 
+    #Pic 
+    pic_path = StringVar()
+    pic_path.set('')
+
+    def open_pic():
+        path = askopenfilename()
+
+        if path:
+            img = ImageTk.PhotoImage(Image.open(path).resize((118,120)))
+            pic_path.set(path)
+
+            add_pic_btn.config(image=img)
+            add_pic_btn.image = img
+        
+
+
     #link to home
     def home():
         add_profile_fm.destroy()
@@ -277,6 +315,30 @@ def add_profile_page():
         else:
             pass
 
+    #Empty Error Mssg
+    def  validation():
+        if std_name_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out student's name field.")
+        elif std_age_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out student's age field.")
+        elif std_contact_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out student's contact number field.")
+        elif std_yr_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out student's year level field.")
+        elif std_blk_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out student's block field.")
+        elif std_email_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out email field.")
+        elif std_pass_ent.get() == '':
+            errmsg = messagebox.showwarning("Input required", "Please fill out 'Create Account Password' field")                       
+        else:
+            confirm = messagebox.askyesno("Confirmation","Are you sure you want to submit data?")
+            if confirm:
+                print(confirm)
+        
+
+            
+
 
     #Std Gender
     std_gender = StringVar()
@@ -297,7 +359,7 @@ def add_profile_page():
             highlightthickness=2)
 
     add_pic_fm.place(x=10, y=10, height=125, width=125)
-    add_pic_btn = Button(add_pic_fm, image=id_img, bd=0)
+    add_pic_btn = Button(add_pic_fm, image=id_img, bd=0, command=open_pic)
     add_pic_btn.pack()
 
    
@@ -410,9 +472,10 @@ def add_profile_page():
     home_btn = Button(add_profile_fm, text='Home', fg='white', bg='grey', font=('Bold', 12), command=popup)
     home_btn.place(x=260, y=500)
 
-    home_btn = Button(add_profile_fm, text='Submit', fg='white', bg=bg_color, font=('Bold', 12))
-    home_btn.place(x=380, y=500)
+    submit_btn = Button(add_profile_fm, text='Submit', fg='white', bg=bg_color, font=('Bold', 12), command=validation)
+    submit_btn.place(x=380, y=500)
 
 welcome_page()
 
 app.mainloop()
+
