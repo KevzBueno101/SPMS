@@ -4,6 +4,8 @@ from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk  # type: ignore
 import sqlite3 as sql
+import random
+import os
 
 # -----Credit Section----#
     #<a href="https://www.flaticon.com/free-icons/info" title="info icons">Info icons created by Vectoricons - Flaticon</a>
@@ -58,6 +60,30 @@ close_eye = PhotoImage(file="assets/close_eye.png")
 open_eye = PhotoImage(file="assets/open_eye.png")
 
 
+
+#Database
+# def init_database():
+#     if os.path.exists("students_acc.db"):
+#         pass
+#     else:
+#         conn = sql.connect("students_acc.db")
+#         cursor = conn.cursor()
+#         cursor.execute("""
+#         CREATE TABLE IF NOT EXISTS students (
+#         idnum text,
+#         password text,
+#         name text, 
+#         age text,                           
+#         gender text,
+#         contact_num text,
+#         yr_lvl text,
+#         blk text,
+#         email text,
+#         image blob
+#         )
+#         """)
+#         conn.commit()
+#         conn.close()
 
 
 
@@ -337,8 +363,19 @@ def add_profile_page():
                 print(confirm)
         
 
-            
+    #Generate ID num
+    def gen_id():
+        gen_id = ''
+        
+        for r in range (5):
+            gen_id += str(random.randint(0,9))
+        
+        print(f"ID num: {gen_id}")
 
+        std_idnum_ent.config(state=NORMAL)
+        std_idnum_ent.delete(0, END)
+        std_idnum_ent.insert(END, gen_id)
+        std_idnum_ent.config(state='readonly')
 
     #Std Gender
     std_gender = StringVar()
@@ -361,7 +398,6 @@ def add_profile_page():
     add_pic_fm.place(x=10, y=10, height=125, width=125)
     add_pic_btn = Button(add_pic_fm, image=id_img, bd=0, command=open_pic)
     add_pic_btn.pack()
-
    
 
     #Student Name Label
@@ -425,9 +461,8 @@ def add_profile_page():
     std_idnum_ent = Entry(add_profile_fm, font=('Times New Roman', 18), fg=bg_color, bd=0)
     std_idnum_ent.place(x=420, y=20, width=90)
 
-    std_idnum_ent.insert(END, '12345')
     std_idnum_ent.config(state='readonly')
-
+    gen_id()
 
     #Note
     std_idnum_note = Label(add_profile_fm, text='*Automatically Generated ID Number\n Remember using this ID number\n When Logging in to account. ',
@@ -475,7 +510,9 @@ def add_profile_page():
     submit_btn = Button(add_profile_fm, text='Submit', fg='white', bg=bg_color, font=('Bold', 12), command=validation)
     submit_btn.place(x=380, y=500)
 
+    divider = Frame(add_profile_fm, bg='grey', height=550)
+    divider.place(x=220, y=20, width=2)
+
 welcome_page()
 
 app.mainloop()
-
