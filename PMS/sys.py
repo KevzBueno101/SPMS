@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
-from PIL import Image, ImageTk  # type: ignore
+from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps  # type: ignore
 import sqlite3 as sql
 import random
 import os
@@ -20,7 +20,7 @@ import os
 app=Tk()
 app.geometry("550x600")
 app.resizable(False, False)
-app.title("Profile Management System (PMS)")
+app.title("Student Profile Management System (SPMS)")
 
 
 bg_color = '#06202B' #Background Color
@@ -49,11 +49,9 @@ icon2 = icon2.resize((90, 90), Image.Resampling.LANCZOS)
 login_admin_img1 = ImageTk.PhotoImage(icon2)
 
 #USER Icon
-
 user_icon = Image.open("assets/user.png")
 user_icon = user_icon.resize((120, 120), Image.Resampling.LANCZOS)
 id_img = ImageTk.PhotoImage(user_icon)
-
 
 #Padlock ICON
 close_eye = PhotoImage(file="assets/close_eye.png")
@@ -62,31 +60,128 @@ open_eye = PhotoImage(file="assets/open_eye.png")
 
 
 #Database
-# def init_database():
-#     if os.path.exists("students_acc.db"):
-#         pass
-#     else:
-#         conn = sql.connect("students_acc.db")
-#         cursor = conn.cursor()
-#         cursor.execute("""
-#         CREATE TABLE IF NOT EXISTS students (
-#         idnum text,
-#         password text,
-#         name text, 
-#         age text,                           
-#         gender text,
-#         contact_num text,
-#         yr_lvl text,
-#         blk text,
-#         email text,
-#         image blob
-#         )
-#         """)
-#         conn.commit()
-#         conn.close()
+def init_database():
+    # Create database and table if they don't exist
+    conn = sql.connect("students_acc.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        idnum text PRIMARY KEY,
+        password text,
+        name text, 
+        age text,                           
+        gender text,
+        contact_num text,
+        yr_lvl text,
+        blk text,
+        email text,
+        image blob
+    )
+    """)
+    conn.commit()
+    conn.close()
+    
+    # Check if table exists and has data
+    conn = sql.connect("students_acc.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM students")
+    print(cursor.fetchall())
+    conn.close()
+
+#Add Data
+def add_data(idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image):
+    conn = sql.connect("students_acc.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+        INSERT INTO students (idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image))
+        conn.commit()
+        messagebox.showinfo("Success", "Profile added successfully!\nID Number: {}\nName: {}".format(idnum, name))
+    except sql.IntegrityError:
+        messagebox.showerror("Error", "ID number already exists!")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+    finally:
+        conn.close()
+
+
+#Draw the cardfrom PIL import Image, ImageOps
+
+def draw_std_card(std_pic_path, std_data):
+    labels = """
+ID number:
+Name:
+Gender:
+Age:
+Year Level:
+Block:
+Contact:
+Email:
+"""
+
+    std_card = Image.open('assets/student_card_frame.png')
+    pic = Image.open('assets/ID.png')
+
+    # Assuming you want the picture to fit the paste box (e.g., 100×120 pixels)
+    box_size = (100, 120)
+    pic_resized = ImageOps.fit(pic, box_size, method=Image.LANCZOS, centering=(0.5, 0.5))
+    
+    # Paste resized picture into frame
+    std_card.paste(pic_resized, (15, 20))
+
+    #
+    draw = ImageDraw.Draw(std_card)
+    heading_font = ImageFont.truetype('bahnschrift', 18)
+    labels_font = ImageFont.truetype('arial', 14)
+    data_font = ImageFont.truetype('arial', 13)
+
+    
+    draw.text(xy=(150,50),font=heading_font, text='Student Card', fill=(0,0,0))
+    draw.multiline_text(xy=(20,130),text=labels, fill=(0,0,0),font=labels_font, spacing=5)
+    draw.multiline_text(xy=(150,130),text=std_data, fill=(0,0,0),font=data_font, spacing=6)
+     
+    std_card.show()
+ 
+#Student card page
+def student_card_page():
+    student_card_page_fm = Frame(app, highlightbackground=bg_color, 
+                highlightthickness=3)
+
+    student_card_page_fm.pack(pady=50)
+
+    student_card_page_fm.pack_propagate(False)
+    student_card_page_fm.configure(width=450,height=520)
+
+    header_lb = Label(student_card_page_fm, text='Student Card', bg=bg_color, fg='white', font=('Arial Bold', 20))
+    header_lb.place(x=0,y=0,width=450) 
+
+    #Close Button
+    close_btn = Button(student_card_page_fm, text='X', bg=bg_color, fg='white', font=('Arial Bold', 10), bd=0, command = lambda: student_card_page_fm.destroy() )
+    close_btn.place(x=423,y=0)
+    #Student Card button
+    std_card_btn = Button(student_card_page_fm, text='Save Student Card', bg=bg_color, fg='white', font=('Arial Bold', 12), command=student_card_page)
+    std_card_btn.place(x=100, y=425, width=200)
+    #Download button
+    std_card_dwnld_btn = Button(student_card_page_fm, text='  🖨️', bg=bg_color, fg='white', font=('Arial Bold', 12))
+    std_card_dwnld_btn.place(x=305, y=425, width=50)
+    
+
+
+     #Display generated std. Card
+    std_card_lb = Label(student_card_page_fm)
+    std_card_lb.pack(pady=75)
 
 
 
+
+    # #Card Image
+    # card_img = ImageTk.PhotoImage(Image.open('Card.png'))
+    # card_img_lb = Label(student_card_page_fm, image=card_img)
+    # card_img_lb.place(x=50, y=50)
+
+#Welcome Page
 def welcome_page():
 
     #Show info
@@ -356,12 +451,67 @@ def add_profile_page():
         elif std_email_ent.get() == '':
             errmsg = messagebox.showwarning("Input required", "Please fill out email field.")
         elif std_pass_ent.get() == '':
-            errmsg = messagebox.showwarning("Input required", "Please fill out 'Create Account Password' field")                       
+            errmsg = messagebox.showwarning("Input required", "Please fill out 'Create Account Password' field")                        
         else:
+
+            image = b''
+            if pic_path.get() != "":
+                resizepic = Image.open(pic_path.get()).resize((118,120))
+                resizepic.save('temp_pic.png')
+
+                read_data = open('temp_pic.png', 'rb')
+
+                image = read_data.read()
+                read_data.close()
+            else:
+
+                read_data = open(user_icon, 'rb')
+
+                image = read_data.read()
+                read_data.close()
+
             confirm = messagebox.askyesno("Confirmation","Are you sure you want to submit data?")
             if confirm:
+                add_data(idnum=std_idnum_ent.get(),
+                password=std_pass_ent.get(),
+                name=std_name_ent.get(),
+                age=std_age_ent.get(),
+                gender=std_gender.get(),
+                contact_num=std_contact_ent.get(),
+                yr_lvl=std_yr_ent.get(),
+                blk=std_blk_ent.get(),
+                email=std_email_ent.get(),
+                image=image)
+
+                #Std Data
+                data = f"""
+{std_idnum_ent.get()}
+{std_pass_ent.get()}
+{std_name_ent.get()}
+{std_age_ent.get()}
+{std_gender.get()}
+{std_contact_ent.get()}
+{std_yr_ent.get()}
+{std_blk_ent.get()}
+{std_email_ent.get()}
+"""
+                #Draw student card func
+                draw_std_card(std_pic_path=image.get(), std_data=data)
+                
+                # Clear all input fields after successful submission
+                std_name_ent.delete(0, END)
+                std_age_ent.delete(0, END)
+                std_contact_ent.delete(0, END)
+                std_yr_ent.set('')  # Clear combobox
+                std_blk_ent.set('')  # Clear combobox
+                std_email_ent.delete(0, END)
+                std_pass_ent.delete(0, END)
+                std_gender.set('male')  # Reset gender to default
+                pic_path.set('')  # Clear picture path
+                add_pic_btn.config(image=id_img)  # Reset picture button
+                gen_id()  # Generate new ID number
                 print(confirm)
-        
+
 
     #Generate ID num
     def gen_id():
@@ -440,7 +590,7 @@ def add_profile_page():
 
 
     #Year/
-    std_yr_lb = Label(add_profile_fm, text='Year Level/', font=('Calibri', 15), fg=bg_color)
+    std_yr_lb = Label(add_profile_fm, text='Year Level|', font=('Calibri', 15), fg=bg_color)
     std_yr_lb.place(x=10, y=470)
 
     std_yr_ent = ttk.Combobox(add_profile_fm, font=("Calibri", 12), values=yrlvl) 
@@ -514,5 +664,9 @@ def add_profile_page():
     divider.place(x=220, y=20, width=2)
 
 welcome_page()
+
+
+draw_std_card(std_pic_path, std_data)
+
 
 app.mainloop()
