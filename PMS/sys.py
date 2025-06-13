@@ -109,7 +109,7 @@ def add_data(idnum, password, name, age, gender, contact_num, yr_lvl, blk, email
 
 #Draw the cardfrom PIL import Image, ImageOps
 
-def draw_std_card(std_pic_path, std_data):
+def draw_std_card(pic, std_data):
     labels = """
 ID number:
 Name:
@@ -122,7 +122,7 @@ Email:
 """
 
     std_card = Image.open('assets/student_card_frame.png')
-    pic = Image.open('assets/ID.png')
+    pic = Image.open(pic)
 
     # Assuming you want the picture to fit the paste box (e.g., 100×120 pixels)
     box_size = (100, 120)
@@ -484,33 +484,32 @@ def add_profile_page():
                 image=image)
 
                 #Std Data
-                data = f"""
+            data = f"""
 {std_idnum_ent.get()}
-{std_pass_ent.get()}
 {std_name_ent.get()}
-{std_age_ent.get()}
 {std_gender.get()}
-{std_contact_ent.get()}
+{std_age_ent.get()}
 {std_yr_ent.get()}
 {std_blk_ent.get()}
+{std_contact_ent.get()}
 {std_email_ent.get()}
 """
-                #Draw student card func
-                draw_std_card(std_pic_path=image.get(), std_data=data)
+            #Draw student card func
+            draw_std_card(pic_path.get(), data)
                 
                 # Clear all input fields after successful submission
-                std_name_ent.delete(0, END)
-                std_age_ent.delete(0, END)
-                std_contact_ent.delete(0, END)
-                std_yr_ent.set('')  # Clear combobox
-                std_blk_ent.set('')  # Clear combobox
-                std_email_ent.delete(0, END)
-                std_pass_ent.delete(0, END)
-                std_gender.set('male')  # Reset gender to default
-                pic_path.set('')  # Clear picture path
-                add_pic_btn.config(image=id_img)  # Reset picture button
-                gen_id()  # Generate new ID number
-                print(confirm)
+            std_name_ent.delete(0, END)
+            std_age_ent.delete(0, END)
+            std_contact_ent.delete(0, END)
+            std_yr_ent.set('')  # Clear combobox
+            std_blk_ent.set('')  # Clear combobox
+            std_email_ent.delete(0, END)
+            std_pass_ent.delete(0, END)
+            std_gender.set('male')  # Reset gender to default
+            pic_path.set('')  # Clear picture path
+            add_pic_btn.config(image=id_img)  # Reset picture button
+            gen_id()  # Generate new ID number
+            print(confirm)
 
 
     #Generate ID num
@@ -664,9 +663,5 @@ def add_profile_page():
     divider.place(x=220, y=20, width=2)
 
 welcome_page()
-
-
-draw_std_card(std_pic_path, std_data)
-
 
 app.mainloop()
