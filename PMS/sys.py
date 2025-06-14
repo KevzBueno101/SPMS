@@ -1,27 +1,17 @@
 from tkinter import *
+import sqlite3 as sql
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
 from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps  # type: ignore
-import sqlite3 as sql
 import random
 import os
-
-# -----Credit Section----#
-    #<a href="https://www.flaticon.com/free-icons/info" title="info icons">Info icons created by Vectoricons - Flaticon</a>
-    #<a href="https://www.flaticon.com/free-icons/add" title="add icons">Add icons created by Freepik - Flaticon</a>
-    #<a href="https://www.flaticon.com/free-icons/admin" title="admin icons">Admin icons created by Freepik - Flaticon</a>
-    #<a href="https://www.flaticon.com/free-icons/eye" title="eye icons">Eye icons created by Gregor Cresnar - Flaticon</a>
-    #<a href="https://www.flaticon.com/free-icons/hide" title="hide icons">Hide icons created by The Icon Tree - Flaticon</a>
-    #<a href="https://www.flaticon.com/free-icons/user" title="user icons">User icons created by kmg design - Flaticon</a>
-#System Inspired by Tkinterhub: https://www.youtube.com/@tkinterhub
-#-----------------------#
 
 app=Tk()
 app.geometry("550x600")
 app.resizable(False, False)
 app.title("Student Profile Management System (SPMS)")
-
 
 bg_color = '#06202B' #Background Color
 
@@ -141,16 +131,17 @@ Email:
     draw.text(xy=(150,50),font=heading_font, text='Student Card', fill=(0,0,0))
     draw.multiline_text(xy=(20,130),text=labels, fill=(0,0,0),font=labels_font, spacing=5)
     draw.multiline_text(xy=(150,130),text=std_data, fill=(0,0,0),font=data_font, spacing=6)
-     
-    std_card.show()
- 
+
+    return std_card
 #Student card page
-def student_card_page():
+def student_card_page(std_card_obj):
+
+    std_card_img = ImageTk.PhotoImage(std_card_obj)
+
     student_card_page_fm = Frame(app, highlightbackground=bg_color, 
                 highlightthickness=3)
 
     student_card_page_fm.pack(pady=50)
-
     student_card_page_fm.pack_propagate(False)
     student_card_page_fm.configure(width=450,height=520)
 
@@ -160,26 +151,24 @@ def student_card_page():
     #Close Button
     close_btn = Button(student_card_page_fm, text='X', bg=bg_color, fg='white', font=('Arial Bold', 10), bd=0, command = lambda: student_card_page_fm.destroy() )
     close_btn.place(x=423,y=0)
+
+    # Save function
+    def save_card():
+        file_path = asksaveasfilename(defaultextension='.png', filetypes=[('PNG Files', '*.png')], title='Save Student Card As')
+        if file_path:
+            std_card_obj.save(file_path)
+
     #Student Card button
-    std_card_btn = Button(student_card_page_fm, text='Save Student Card', bg=bg_color, fg='white', font=('Arial Bold', 12), command=student_card_page)
+    std_card_btn = Button(student_card_page_fm, text='Save Student Card', bg=bg_color, fg='white', font=('Arial Bold', 12), command=save_card)
     std_card_btn.place(x=100, y=425, width=200)
     #Download button
-    std_card_dwnld_btn = Button(student_card_page_fm, text='  🖨️', bg=bg_color, fg='white', font=('Arial Bold', 12))
+    std_card_dwnld_btn = Button(student_card_page_fm, text='  🖨️', bg=bg_color, fg='white', font=('Arial Bold', 12), command=save_card)
     std_card_dwnld_btn.place(x=305, y=425, width=50)
     
-
-
-     #Display generated std. Card
-    std_card_lb = Label(student_card_page_fm)
+    #Display generated std. Card
+    std_card_lb = Label(student_card_page_fm, image = std_card_img)
     std_card_lb.pack(pady=75)
-
-
-
-
-    # #Card Image
-    # card_img = ImageTk.PhotoImage(Image.open('Card.png'))
-    # card_img_lb = Label(student_card_page_fm, image=card_img)
-    # card_img_lb.place(x=50, y=50)
+    std_card_lb.image = std_card_img
 
 #Welcome Page
 def welcome_page():
@@ -495,7 +484,9 @@ def add_profile_page():
 {std_email_ent.get()}
 """
             #Draw student card func
-            draw_std_card(pic_path.get(), data)
+            get_std_card = draw_std_card(pic_path.get(), data)
+
+            student_card_page(std_card_obj=get_std_card)
                 
                 # Clear all input fields after successful submission
             std_name_ent.delete(0, END)
@@ -649,9 +640,7 @@ def add_profile_page():
     #Show Password ICON
     show_icon_pass = Button(add_profile_fm, image=close_eye, border=0, command=show_hidden_pass)
     show_icon_pass.place(x=450, y=350)
-
-
-
+    
     #Home Button
     home_btn = Button(add_profile_fm, text='Home', fg='white', bg='grey', font=('Bold', 12), command=popup)
     home_btn.place(x=260, y=500)
