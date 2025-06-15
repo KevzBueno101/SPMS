@@ -7,6 +7,7 @@ from tkinter.filedialog import asksaveasfilename
 from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps  # type: ignore
 import random
 import os
+import win32api
 
 app=Tk()
 app.geometry("550x600")
@@ -97,8 +98,7 @@ def add_data(idnum, password, name, age, gender, contact_num, yr_lvl, blk, email
         conn.close()
 
 
-#Draw the cardfrom PIL import Image, ImageOps
-
+#Draw std card
 def draw_std_card(pic, std_data):
     labels = """
 ID number:
@@ -114,8 +114,7 @@ Email:
     std_card = Image.open('assets/student_card_frame.png')
     pic = Image.open(pic)
 
-    # Assuming you want the picture to fit the paste box (e.g., 100×120 pixels)
-    box_size = (100, 120)
+    box_size = (123, 120)
     pic_resized = ImageOps.fit(pic, box_size, method=Image.LANCZOS, centering=(0.5, 0.5))
     
     # Paste resized picture into frame
@@ -124,7 +123,7 @@ Email:
     #
     draw = ImageDraw.Draw(std_card)
     heading_font = ImageFont.truetype('bahnschrift', 18)
-    labels_font = ImageFont.truetype('arial', 14)
+    labels_font = ImageFont.truetype('arialbd', 14)
     data_font = ImageFont.truetype('arial', 13)
 
     
@@ -154,16 +153,24 @@ def student_card_page(std_card_obj):
 
     # Save function
     def save_card():
-        file_path = asksaveasfilename(defaultextension='.png', filetypes=[('PNG Files', '*.png')], title='Save Student Card As')
+        file_path = asksaveasfilename(defaultextension='.png', filetypes=[('PNG Files', '*.png')], title='Save Student Card As')    
         if file_path:
             std_card_obj.save(file_path)
+    #Print function
+    def print_card():
+        file_path = asksaveasfilename(defaultextension='.png', filetypes=[('PNG Files', '*.png')], title='Save Student Card As')    
+        if file_path:
+            std_card_obj.save(file_path)
+         # Print the saved image using its path
+            win32api.ShellExecute(0, 'print', file_path, None, '.', 0)
 
-    #Student Card button
-    std_card_btn = Button(student_card_page_fm, text='Save Student Card', bg=bg_color, fg='white', font=('Arial Bold', 12), command=save_card)
-    std_card_btn.place(x=100, y=425, width=200)
+
+    #Student Card Save button
+    std_save_card_btn = Button(student_card_page_fm, text='Save Student Card', bg=bg_color, fg='white', font=('Arial Bold', 12), command=save_card)
+    std_save_card_btn.place(x=100, y=425, width=200)
     #Download button
-    std_card_dwnld_btn = Button(student_card_page_fm, text='  🖨️', bg=bg_color, fg='white', font=('Arial Bold', 12), command=save_card)
-    std_card_dwnld_btn.place(x=305, y=425, width=50)
+    std_card_print_btn = Button(student_card_page_fm, text='  🖨️', bg=bg_color, fg='white', font=('Arial Bold', 12), command=print_card)
+    std_card_print_btn.place(x=305, y=425, width=50)
     
     #Display generated std. Card
     std_card_lb = Label(student_card_page_fm, image = std_card_img)
@@ -421,9 +428,27 @@ def add_profile_page():
         if mssgbox:
             add_profile_fm.destroy()
             app.update()
-            welcome_page()
+            home()
         else:
             pass
+    def clear_data_in_form():
+                        # Clear all input fields after successful submission
+            std_name_ent.delete(0, END)
+            std_age_ent.delete(0, END)
+            std_contact_ent.delete(0, END)
+            std_yr_ent.set('')  # Clear combobox
+            std_blk_ent.set('')  # Clear combobox
+            std_email_ent.delete(0, END)
+            std_pass_ent.delete(0, END)
+            std_gender.set('male')  # Reset gender to default
+            pic_path.set('')  # Clear picture path
+            add_pic_btn.config(image=id_img)  # Reset picture button
+            gen_id()  # Generate new ID number
+
+    def open_student_card_page(card_obj):
+        student_card_page(std_card_obj=card_obj)
+
+            
 
     #Empty Error Mssg
     def  validation():
@@ -486,22 +511,9 @@ def add_profile_page():
             #Draw student card func
             get_std_card = draw_std_card(pic_path.get(), data)
 
-            student_card_page(std_card_obj=get_std_card)
-                
-                # Clear all input fields after successful submission
-            std_name_ent.delete(0, END)
-            std_age_ent.delete(0, END)
-            std_contact_ent.delete(0, END)
-            std_yr_ent.set('')  # Clear combobox
-            std_blk_ent.set('')  # Clear combobox
-            std_email_ent.delete(0, END)
-            std_pass_ent.delete(0, END)
-            std_gender.set('male')  # Reset gender to default
-            pic_path.set('')  # Clear picture path
-            add_pic_btn.config(image=id_img)  # Reset picture button
-            gen_id()  # Generate new ID number
-            print(confirm)
-
+            open_student_card_page(get_std_card)#Redirect to Save Card Page
+            
+            clear_data_in_form()#Clear form
 
     #Generate ID num
     def gen_id():
