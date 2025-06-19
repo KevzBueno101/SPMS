@@ -250,6 +250,35 @@ User icon by kmg design - https://www.flaticon.com/free-icons/user
     login_addu_icon .place(x=45, y=310)
 
 
+
+#Forget Password Page
+def forget_pass_page():
+
+    forget_pass_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
+    forget_pass_fm.place(x=100, y=140, width=350, height=250)
+
+    heading_forgot_pass = Label(forget_pass_fm, text='⚠️Recover Forgotten Password', bg=bg_color, font=('Arial Bodl', 13), fg='white', width=40)
+    heading_forgot_pass.place(x=0,y=0)
+
+    close_btn = Button(forget_pass_fm, text='✖️', font=('Bold', 9), bg=bg_color, fg='white', bd=0, command=lambda: forget_pass_fm.destroy())
+    close_btn.place(x=320, y=0)
+
+    std_id_lb = Label(forget_pass_fm, text='Enter Student ID number', font=('Calibri Bold', 13), fg=bg_color)
+    std_id_lb.place(x=80, y=50)
+
+    std_id_ent = Entry(forget_pass_fm,  font=('Calibri', 11), width=40, justify=CENTER, 
+                       highlightbackground='grey',highlightcolor=bg_color, highlightthickness=2)
+    std_id_ent.place(x=30, y=75)
+
+    note_lb = Label(forget_pass_fm, text='Via Email Address\nWe will send to you\nyour forgotten passsword.', font=('Arial Italic', 8), fg=bg_color, justify=CENTER)
+    note_lb.place(x=107, y= 120)
+
+    next_btn = Button(forget_pass_fm, text='Next', font=('Calibri Bold', 12), fg='white', bg=bg_color, bd=0, width=20)
+    next_btn.place(x=90, y=180)
+
+
+
+#Student Login
 def student_login_page():
     #Back button
     def back_arrow():
@@ -266,6 +295,24 @@ def student_login_page():
         else:
             std_pass_ent.config(show='*')
             show_icon_pass.config(image=close_eye)
+
+    #Login Account\
+    def login_acc():
+        verifu_idnum = check_idnum_exist(idnum= std_id_ent.get())
+        if verifu_idnum:
+            print('ID # is correct')
+
+            verify_pass = check_valid_pass(idnum=std_id_ent.get(), password=std_pass_ent.get())
+            if verify_pass:
+                print("Password is correct")
+            else:
+                print("Password is incorrect")
+                messagebox.showerror('Invalid Password', 'Please input  a valid password.')
+        else:
+            print("ID is incorrect")
+            messagebox.showerror('Invalid', 'Please input  a valid ID number.')
+
+
 
     #Login page
     #frame
@@ -307,7 +354,7 @@ def student_login_page():
     show_icon_pass.place(x=350, y=330)
 
     #Login Button
-    login_but = Button(std_login_page_fm, text='Login', font=('Calibri Bold', 13),bg=bg_color, fg='white', width=20)
+    login_but = Button(std_login_page_fm, text='Login', font=('Calibri Bold', 13),bg=bg_color, fg='white', width=20, command=login_acc)
     login_but.place(x=125, y=375)
 
     #FOrgot Password
@@ -388,6 +435,33 @@ def admin_login_page():
     back.place(x=3, y=40)
 
 
+def check_idnum_exist(idnum):
+    conn = sql.connect("students_acc.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT idnum FROM students WHERE idnum=?",(idnum,))
+    result = cursor.fetchone()
+
+    cursor.close()
+
+    if result:
+        return True
+    else:
+        return False
+
+def check_valid_pass(idnum, password):
+    conn = sql.connect("students_acc.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT idnum, password FROM students WHERE idnum=? AND password=?",(idnum, password))
+    result = cursor.fetchone()
+
+    cursor.close()
+
+    if result:
+        return True
+    else:
+        return False
 
 
 def add_profile_page():
@@ -452,6 +526,7 @@ def add_profile_page():
 
     #Empty Error Mssg
     def  validation():
+
         if std_name_ent.get() == '':
             errmsg = messagebox.showwarning("Input required", "Please fill out student's name field.")
         elif std_age_ent.get() == '':
@@ -477,12 +552,14 @@ def add_profile_page():
 
                 image = read_data.read()
                 read_data.close()
+            
             else:
-
-                read_data = open(user_icon, 'rb')
-
+                default_user_icon_path = "assets/user.png"
+                read_data = open(default_user_icon_path, 'rb')
                 image = read_data.read()
                 read_data.close()
+                pic_path.set(default_user_icon_path)
+
 
             confirm = messagebox.askyesno("Confirmation","Are you sure you want to submit data?")
             if confirm:
@@ -514,6 +591,8 @@ def add_profile_page():
             open_student_card_page(get_std_card)#Redirect to Save Card Page
             
             clear_data_in_form()#Clear form
+
+            
 
     #Generate ID num
     def gen_id():
@@ -663,6 +742,5 @@ def add_profile_page():
     divider = Frame(add_profile_fm, bg='grey', height=550)
     divider.place(x=220, y=20, width=2)
 
-welcome_page()
-
+forget_pass_page()
 app.mainloop()
