@@ -254,6 +254,13 @@ User icon by kmg design - https://www.flaticon.com/free-icons/user
 #Forget Password Page
 def forget_pass_page():
 
+    def recover_pass():
+        if check_idnum_exist(idnum=std_id_ent.get()):
+            print('Correct')
+        else:
+            print('Incorrect')
+            messagebox.showerror('Try again','Invalid ID number!')
+
     forget_pass_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
     forget_pass_fm.place(x=100, y=140, width=350, height=250)
 
@@ -273,7 +280,7 @@ def forget_pass_page():
     note_lb = Label(forget_pass_fm, text='Via Email Address\nWe will send to you\nyour forgotten passsword.', font=('Arial Italic', 8), fg=bg_color, justify=CENTER)
     note_lb.place(x=107, y= 120)
 
-    next_btn = Button(forget_pass_fm, text='Next', font=('Calibri Bold', 12), fg='white', bg=bg_color, bd=0, width=20)
+    next_btn = Button(forget_pass_fm, text='Next', font=('Calibri Bold', 12), fg='white', bg=bg_color, bd=0, width=20, command=recover_pass)
     next_btn.place(x=90, y=180)
 
 
