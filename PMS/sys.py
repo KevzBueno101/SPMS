@@ -8,11 +8,17 @@ from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps  # type: ignore
 import random
 import os
 import win32api
+import smtplib
+from email.message import EmailMessage
+from dotenv import load_dotenv
+
 
 app=Tk()
 app.geometry("550x600")
 app.resizable(False, False)
 app.title("Student Profile Management System (SPMS)")
+logo = PhotoImage(file='assets/account-management.png')
+app.iconphoto(False, logo)
 
 bg_color = '#06202B' #Background Color
 
@@ -193,6 +199,7 @@ Add & Admin icons by Freepik - https://www.flaticon.com/free-icons/add
 Eye icon by Gregor Cresnar - https://www.flaticon.com/free-icons/eye
 Hide icon by The Icon Tree - https://www.flaticon.com/free-icons/hide
 User icon by kmg design - https://www.flaticon.com/free-icons/user
+Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/account-management
                                        """)
 
  
@@ -250,16 +257,68 @@ User icon by kmg design - https://www.flaticon.com/free-icons/user
     login_addu_icon .place(x=45, y=310)
 
 
+#Send Email
+def send_email(to_email, recovered_pass):
+    sender_email = 
+    
 
-#Forget Password Page
+
+
+
+
+# Forget Password Page
 def forget_pass_page():
-
     def recover_pass():
-        if check_idnum_exist(idnum=std_id_ent.get()):
-            print('Correct')
+        idnum = std_id_ent.get()
+
+        if check_idnum_exist(idnum=idnum):
+            con = sql.connect('students_acc.db')
+            cursor = con.cursor()
+
+            cursor.execute("SELECT password FROM students WHERE idnum = ?", (idnum,))
+            result = cursor.fetchall()
+
+            if not result:
+                messagebox.showerror('Error', 'Password not found!')
+                return
+
+            recovered_pass = result[0][0]
+
+            cursor.execute("SELECT email FROM students WHERE idnum = ?", (idnum,))
+            student_email = cursor.fetchall()[0][0]
+            con.close()
+
+            # Send confirmation first
+            confirm = messagebox.askyesno("Confirmation", f"We will send your forgotten password to:\n{student_email}\nDo you want to continue?")
+            if not confirm:
+                return
+
+            load_dotenv()
+            sender_email = os.getenv('EMAIL_ADDRESS')
+            sender_pass = os.getenv('EMAIL_PASSWORD')
+
+
+            if not sender_email or not sender_pass:
+                messagebox.showerror("Error", "Email credentials not set in environment variables.")
+                return
+
+            msg = EmailMessage()
+            msg['Subject'] = 'Recovered Password - SPMS'
+            msg['From'] = sender_email
+            msg['To'] = student_email
+            msg.set_content(f"Hello,\n\nHere is your recovered password: {recovered_pass}\n\nKeep it safe!\nSPMS Team")
+
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                    smtp.login(sender_email, sender_pass)
+                    smtp.send_message(msg)
+                messagebox.showinfo("Success", f"Password sent to {student_email}!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to send email.\n{e}")
         else:
-            print('Incorrect')
-            messagebox.showerror('Try again','Invalid ID number!')
+            messagebox.showerror('Try again', 'Invalid ID number!')
+    # UI elements should be placed here (like std_id_ent)
+
 
     forget_pass_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
     forget_pass_fm.place(x=100, y=140, width=350, height=250)
@@ -475,6 +534,7 @@ def add_profile_page():
 
     #Pic 
     pic_path = StringVar()
+
     pic_path.set('')
 
     def open_pic():
@@ -682,6 +742,7 @@ def add_profile_page():
     std_yr_lb.place(x=10, y=470)
 
     std_yr_ent = ttk.Combobox(add_profile_fm, font=("Calibri", 12), values=yrlvl) 
+    std_yr_ent.current(0)
     std_yr_ent.place(x=10, y=500, width= 90, height= 30)
 
     #/Block
@@ -689,6 +750,7 @@ def add_profile_page():
     std_blk_lb.place(x=110, y=470)
 
     std_blk_ent = ttk.Combobox(add_profile_fm, font=("Calibri", 12), values=blk) 
+    std_blk_ent.current(0)
     std_blk_ent.place(x=100, y=500, width= 90, height= 30)
 
     #Student ID#
@@ -749,5 +811,9 @@ def add_profile_page():
     divider = Frame(add_profile_fm, bg='grey', height=550)
     divider.place(x=220, y=20, width=2)
 
-forget_pass_page()
+
+
+# forget_pass_page()
+welcome_page()
+
 app.mainloop()
