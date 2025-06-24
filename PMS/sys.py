@@ -257,64 +257,79 @@ Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/accou
     login_addu_icon .place(x=45, y=310)
 
 
-#Send Email
-def send_email(to_email, recovered_pass):
-    sender_email = 
-    
-
-
 
 
 
 # Forget Password Page
 def forget_pass_page():
     def recover_pass():
-        idnum = std_id_ent.get()
+        idnum = std_id_ent.get().strip()
+
+        if not idnum:
+            messagebox.showwarning("Input Error", "Please enter your ID number.")
+            return
 
         if check_idnum_exist(idnum=idnum):
-            con = sql.connect('students_acc.db')
-            cursor = con.cursor()
-
-            cursor.execute("SELECT password FROM students WHERE idnum = ?", (idnum,))
-            result = cursor.fetchall()
-
-            if not result:
-                messagebox.showerror('Error', 'Password not found!')
-                return
-
-            recovered_pass = result[0][0]
-
-            cursor.execute("SELECT email FROM students WHERE idnum = ?", (idnum,))
-            student_email = cursor.fetchall()[0][0]
-            con.close()
-
-            # Send confirmation first
-            confirm = messagebox.askyesno("Confirmation", f"We will send your forgotten password to:\n{student_email}\nDo you want to continue?")
-            if not confirm:
-                return
-
-            load_dotenv()
-            sender_email = os.getenv('EMAIL_ADDRESS')
-            sender_pass = os.getenv('EMAIL_PASSWORD')
-
-
-            if not sender_email or not sender_pass:
-                messagebox.showerror("Error", "Email credentials not set in environment variables.")
-                return
-
-            msg = EmailMessage()
-            msg['Subject'] = 'Recovered Password - SPMS'
-            msg['From'] = sender_email
-            msg['To'] = student_email
-            msg.set_content(f"Hello,\n\nHere is your recovered password: {recovered_pass}\n\nKeep it safe!\nSPMS Team")
-
             try:
+                con = sql.connect('students_acc.db')
+                cursor = con.cursor()
+
+                # Fetch password and email
+                cursor.execute("SELECT password, email FROM students WHERE idnum = ?", (idnum,))
+                result = cursor.fetchone()
+                con.close()
+
+                if not result:
+                    messagebox.showerror('Error', 'ID number found but no data associated.')
+                    return
+
+                recovered_pass, student_email = result
+
+                confirm = messagebox.askyesno("Confirmation",
+                    f"We will send your forgotten password to:\n{student_email}\n\nDo you want to continue?")
+                if not confirm:
+                    return
+
+                # Load environment variables
+                load_dotenv()
+                sender_email = os.getenv('EMAIL_ADDRESS')
+                sender_pass = os.getenv('EMAIL_PASSWORD')
+
+                if not sender_email or not sender_pass:
+                    messagebox.showerror("Error", "Email credentials are not set in environment variables.")
+                    return
+
+                # Compose email
+                msg = EmailMessage()
+                msg['Subject'] = 'Recovered Password - SPMS'
+                msg['From'] = sender_email
+                msg['To'] = student_email
+                msg.set_content(f"""
+𝙷𝚎𝚕𝚕𝚘 {student_email},
+
+𝚃𝚑𝚒𝚜 𝚒𝚜 𝚢𝚘𝚞𝚛 𝚛𝚎𝚚𝚞𝚎𝚜𝚝𝚎𝚍 𝚙𝚊𝚜𝚜𝚠𝚘𝚛𝚍 𝚛𝚎𝚌𝚘𝚟𝚎𝚛𝚢 𝚎𝚖𝚊𝚒𝚕 𝚏𝚛𝚘𝚖 𝚂𝙿𝙼𝚂.
+
+Your Password: {recovered_pass}
+
+𝙿𝚕𝚎𝚊𝚜𝚎 𝚔𝚎𝚎𝚙 𝚝𝚑𝚒𝚜 𝚒𝚗𝚏𝚘𝚛𝚖𝚊𝚝𝚒𝚘𝚗 𝚜𝚎𝚌𝚞𝚛𝚎.
+
+𝑺𝑷𝑴𝑺 𝑨𝒅𝒎𝒊𝒏
+
+----------------------------------------------------------------------------
+𝑻𝒉𝒊𝒔 𝒊𝒔 𝒄𝒐𝒎𝒑𝒖𝒕𝒆𝒓 𝒈𝒆𝒏𝒆𝒓𝒂𝒕𝒆𝒅 𝒆𝒎𝒂𝒊𝒍, 𝒑𝒍𝒆𝒂𝒔𝒆 𝒅𝒐 𝒏𝒐𝒕 𝒓𝒆𝒑𝒍𝒚
+
+
+                """.strip())
+
+                # Send email
                 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
                     smtp.login(sender_email, sender_pass)
                     smtp.send_message(msg)
-                messagebox.showinfo("Success", f"Password sent to {student_email}!")
+
+                messagebox.showinfo("Success", f"Password sent successfully to {student_email}!")
+
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to send email.\n{e}")
+                messagebox.showerror("Email Error", f"Failed to send email.\n\nDetails: {e}")
         else:
             messagebox.showerror('Try again', 'Invalid ID number!')
     # UI elements should be placed here (like std_id_ent)
@@ -424,7 +439,7 @@ def student_login_page():
     login_but.place(x=125, y=375)
 
     #FOrgot Password
-    fgt_pass = Button(std_login_page_fm, text="⚠\nForgot Password", font=('Calibri', 8), fg=bg_color, border=0)
+    fgt_pass = Button(std_login_page_fm, text="⚠\nForgot Password", font=('Calibri', 8), fg=bg_color, border=0, command=forget_pass_page)
     fgt_pass.place(x=175, y=440)
 
       #Back Button
