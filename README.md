@@ -12,13 +12,13 @@ A Windows-based desktop application built using **Python** and **Tkinter** for m
 ![VS Code](https://img.shields.io/badge/VSCode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 ---
 
-## 🚀 Features (Planned)
+## 🚀 Features (Planned)  _(in progress)_
 
 - Add, view, edit, and delete student profiles  
 - Searchable student listings 
 - Data persistence with SQLite3  
 - Intuitive GUI layout with forms and tables
- _(in progress)_
+
 ---
 
 ## 🎯 Purpose
