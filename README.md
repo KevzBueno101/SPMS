@@ -6,11 +6,10 @@ A Windows-based desktop application built using **Python** and **Tkinter** for m
 
 ## 🛠️ Tech Stack
 
-- **Python** – core language  
-- **Tkinter** – GUI development  
-- **SQLite3** – planned backend database  
-- **VS Code** – development environment
-
+![Python](https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Tkinter](https://img.shields.io/badge/Tkinter-FFB200?style=for-the-badge&logo=python&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![VS Code](https://img.shields.io/badge/VSCode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 ---
 
 ## 🚀 Features (Planned)
