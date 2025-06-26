@@ -15,10 +15,10 @@ A Windows-based desktop application built using **Python** and **Tkinter** for m
 ## 🚀 Features (Planned)
 
 - Add, view, edit, and delete student profiles  
-- Searchable student listings  
+- Searchable student listings 
 - Data persistence with SQLite3  
 - Intuitive GUI layout with forms and tables
-
+ _(in progress)_
 ---
 
 ## 🎯 Purpose
