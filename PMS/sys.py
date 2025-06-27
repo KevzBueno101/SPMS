@@ -357,10 +357,120 @@ Your Password: {recovered_pass}
     next_btn = Button(forget_pass_fm, text='Next', font=('Calibri Bold', 12), fg='white', bg=bg_color, bd=0, width=20, command=recover_pass)
     next_btn.place(x=90, y=180)
 
+#Student Dashboard
+def std_dashboard():
+
+    def switch(indicator, page):
+        home_ind.config(bg="#153C50")
+        std_card_ind.config(bg="#153C50")
+        sec_ind.config(bg="#153C50")
+        edit_data_btn_ind.config(bg="#153C50")
+        del_acc_btn_ind.config(bg="#153C50")
+
+        indicator.config(bg="#c3c3c3")
+
+        for widgets in pages_fm.winfo_children():
+            widgets.destroy()
+            app.update()
+
+        page()
+
+#Dashboard
+    dashboard_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
+    dashboard_fm.pack(padx=3, pady=3)
+    dashboard_fm.pack_propagate(False)
+    dashboard_fm.configure(width=550, height=600)
+
+#Side Bar
+    side_bar = Frame(dashboard_fm, bg="#153C50", width=150, height=599, highlightbackground=bg_color, highlightthickness=3)
+    side_bar.place(x=0, y=0)
+#Options
+    home_btn = Button(side_bar, text="Home", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=home_ind, page=home_page))
+    home_btn.place(x=20, y=50)
+
+    home_ind = Label(side_bar, bg="#c3c3c3"
+                     )
+    home_ind.place(x=10, y=47, width=3, height=37)
+
+    std_card_btn = Button(side_bar, text="Student Card", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=std_card_ind, page=std_card_page))
+    std_card_btn.place(x=20, y=100)
+
+    std_card_ind = Label(side_bar, bg="#153C50")
+    std_card_ind.place(x=10, y=97, width=3, height=37)
+
+    sec_btn = Button(side_bar, text="Security", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0,command=lambda: switch(indicator=sec_ind, page=sec_page))
+    sec_btn.place(x=20, y=150)
+
+    sec_ind = Label(side_bar, bg="#153C50")
+    sec_ind.place(x=10, y=147, width=3, height=37)
+
+    edit_data_btn = Button(side_bar, text="Edit Data", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=edit_data_btn_ind, page=edit_page))
+    edit_data_btn.place(x=20, y=200)
+
+    edit_data_btn_ind = Label(side_bar, bg="#153C50")
+    edit_data_btn_ind.place(x=10, y=197, width=3, height=37)
+
+    del_acc_btn = Button(side_bar, text="Delete Account", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=del_acc_btn_ind, page=del_acc_page))
+    del_acc_btn.place(x=20, y=250)
+
+    del_acc_btn_ind = Label(side_bar, bg="#153C50")
+    del_acc_btn_ind.place(x=10, y=247, width=3, height=37)
+
+    logout_btn = Button(side_bar, text="Logout", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0)
+    logout_btn.place(x=20, y=300)
+#Pages Frame
+
+    def home_page():
+        home_page_fm = Frame(pages_fm)
+        home_page_fm.pack(fill=BOTH, expand=True)
+
+        home_page_lb = Label(home_page_fm, text='Home Page', font=('Arial Bold', 15))
+        home_page_lb.place(x=100, y=100)
+
+    def std_card_page():
+        std_card_page_fm = Frame(pages_fm)
+        std_card_page_fm.pack(fill=BOTH, expand=True)
+
+        std_card_page_lb = Label(std_card_page_fm, text='Student Card Page', font=('Arial Bold', 15))
+        std_card_page_lb.place(x=100, y=100)
+
+    def sec_page():
+        sec_page_fm = Frame(pages_fm)
+        sec_page_fm.pack(fill=BOTH, expand=True)
+
+        sec_page_lb = Label(sec_page_fm, text='Security Page', font=('Arial Bold', 15))
+        sec_page_lb.place(x=100, y=100)
+    
+    def edit_page():
+        edit_page_fm = Frame(pages_fm)
+        edit_page_fm.pack(fill=BOTH, expand=True)
+
+        edit_page_lb = Label(edit_page_fm, text='Edit Data Page', font=('Arial Bold', 15))
+        edit_page_lb.place(x=100, y=100)
+
+    def del_acc_page():
+        del_acc_page_fm = Frame(pages_fm)
+        del_acc_page_fm.pack(fill=BOTH, expand=True)
+
+        del_acc_page_lb = Label(del_acc_page_fm, text='Delete Account Page', font=('Arial Bold', 15))
+        del_acc_page_lb.place(x=100, y=100)
+
+
+
+
+    pages_fm = Frame(dashboard_fm)
+    pages_fm.place(x=155, y=2, width=380, height=580)
+    
+   
+
+
+
+
 
 
 #Student Login
 def student_login_page():
+
     #Back button
     def back_arrow():
         std_login_page_fm.destroy()
@@ -825,10 +935,7 @@ def add_profile_page():
 
     divider = Frame(add_profile_fm, bg='grey', height=550)
     divider.place(x=220, y=20, width=2)
-
-
-
 # forget_pass_page()
-welcome_page()
+std_dashboard()
 
 app.mainloop()
