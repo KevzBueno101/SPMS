@@ -29,6 +29,15 @@ This project is a practical exercise to:
 - Prepare for database integration using **SQLite3**
 
 ---
+## Scope of the System
+•	Student Registration and Login
+•	Secure password storage (bcrypt encryption)
+•	Profile creation and editing
+•	Uploading profile pictures
+•	Viewing and printing student ID cards
+•	Storing data locally via SQLite
+
+---
 
 ## 🎥 Inspiration & References
 
