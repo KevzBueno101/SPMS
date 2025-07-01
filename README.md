@@ -30,12 +30,11 @@ This project is a practical exercise to:
 
 ---
 ## Scope of the System
-•	Student Registration and Login
-•	Secure password storage (bcrypt encryption)
-•	Profile creation and editing
-•	Uploading profile pictures
-•	Viewing and printing student ID cards
-•	Storing data locally via SQLite
+- Student Registration and Login
+- Secure password storage (bcrypt encryption)
+- Profile creation and editing
+- Uploading profile pictures
+- Viewing and printing student ID cards Storing data locally via SQLite
 
 ---
 
