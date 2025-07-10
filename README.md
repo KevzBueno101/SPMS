@@ -1,8 +1,7 @@
 # 🎓 Student Profile Management System (SPMS)
 
 A Windows-based desktop application built using **Python** and **Tkinter** for managing student profiles, with plans to integrate **SQLite3** for the backend database. This is an exploration project aimed at enhancing my Python development skills.
-
-*_A product of tutorial hell_
+_A product of tutorial hell_
 ---
 
 ## 🛠️ Tech Stack
