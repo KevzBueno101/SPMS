@@ -2,6 +2,8 @@
 
 A Windows-based desktop application built using **Python** and **Tkinter** for managing student profiles, with plans to integrate **SQLite3** for the backend database. This is an exploration project aimed at enhancing my Python development skills.
 
+A product of tutorial hell
+
 
 ---
 
@@ -12,7 +14,6 @@ A Windows-based desktop application built using **Python** and **Tkinter** for m
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 ![VS Code](https://img.shields.io/badge/VSCode-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 
-___A product of tutorial hell______
 ---
 
 ## 🚀 Features (Planned)  _(in progress)_
