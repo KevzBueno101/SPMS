@@ -61,5 +61,5 @@ Inspired by [Tkinter Hub](https://www.youtube.com/@tkinterhub), which offers gre
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/YourUserName/SPMS.git
+   git clone https://github.com/KevzBueno101/SPMS.git
    cd SPMS
