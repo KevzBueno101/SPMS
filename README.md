@@ -22,6 +22,7 @@ A product of tutorial hell
 - Searchable student listings 
 - Data persistence with SQLite3  
 - Intuitive GUI layout with forms and tables
+- Recovery password using email
 
 ---
 
