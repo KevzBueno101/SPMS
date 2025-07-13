@@ -11,6 +11,7 @@ import win32api
 import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
+import bcrypt
 
 
 app=Tk()
@@ -64,7 +65,7 @@ def init_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS students (
         idnum text PRIMARY KEY,
-        password text,
+        password blob,
         name text, 
         age text,                           
         gender text,
@@ -87,13 +88,16 @@ def init_database():
 
 #Add Data
 def add_data(idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image):
+    #password hashing
+    hashed_pass = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     conn = sql.connect("students_acc.db")
     cursor = conn.cursor()
     try:
         cursor.execute("""
         INSERT INTO students (idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (idnum, password, name, age, gender, contact_num, yr_lvl, blk, email, image))
+        """, (idnum, hashed_pass, name, age, gender, contact_num, yr_lvl, blk, email, image))
         conn.commit()
         messagebox.showinfo("Success", "Profile added successfully!\nID Number: {}\nName: {}".format(idnum, name))
     except sql.IntegrityError:
@@ -274,21 +278,29 @@ def forget_pass_page():
                 con = sql.connect('students_acc.db')
                 cursor = con.cursor()
 
-                # Fetch password and email
-                cursor.execute("SELECT password, email FROM students WHERE idnum = ?", (idnum,))
+                # Fetch email
+                cursor.execute("SELECT email FROM students WHERE idnum = ?", (idnum,))
                 result = cursor.fetchone()
-                con.close()
-
                 if not result:
-                    messagebox.showerror('Error', 'ID number found but no data associated.')
+                    con.close()
+                    messagebox.showerror('Error', 'ID number found but no email associated.')
                     return
-
-                recovered_pass, student_email = result
+                student_email = result[0]
 
                 confirm = messagebox.askyesno("Confirmation",
-                    f"We will send your forgotten password to:\n{student_email}\n\nDo you want to continue?")
+                    f"We will send a temporary password to:\n{student_email}\n\nDo you want to continue?")
                 if not confirm:
+                    con.close()
                     return
+
+                # Generate a secure temporary password
+                temp_pass = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789', k=10))
+                hashed_temp_pass = bcrypt.hashpw(temp_pass.encode('utf-8'), bcrypt.gensalt())
+
+                # Update password in DB
+                cursor.execute("UPDATE students SET password=? WHERE idnum=?", (hashed_temp_pass, idnum))
+                con.commit()
+                con.close()
 
                 # Load environment variables
                 load_dotenv()
@@ -301,24 +313,21 @@ def forget_pass_page():
 
                 # Compose email
                 msg = EmailMessage()
-                msg['Subject'] = 'Recovered Password - SPMS'
+                msg['Subject'] = 'Password Recovery - SPMS'
                 msg['From'] = sender_email
                 msg['To'] = student_email
                 msg.set_content(f"""
-𝙷𝚎𝚕𝚕𝚘 {student_email},
+Hello {student_email},
 
-𝚃𝚑𝚒𝚜 𝚒𝚜 𝚢𝚘𝚞𝚛 𝚛𝚎𝚚𝚞𝚎𝚜𝚝𝚎𝚍 𝚙𝚊𝚜𝚜𝚠𝚘𝚛𝚍 𝚛𝚎𝚌𝚘𝚟𝚎𝚛𝚢 𝚎𝚖𝚊𝚒𝚕 𝚏𝚛𝚘𝚖 𝚂𝙿𝙼𝚂.
+You requested a password recovery from SPMS.
 
-Your Password: {recovered_pass}
+Your Temporary Password: {temp_pass}
 
-𝙿𝚕𝚎𝚊𝚜𝚎 𝚔𝚎𝚎𝚙 𝚝𝚑𝚒𝚜 𝚒𝚗𝚏𝚘𝚛𝚖𝚊𝚝𝚒𝚘𝚗 𝚜𝚎𝚌𝚞𝚛𝚎.
+Please log in using this temporary password, then change your password from your dashboard.
 
-𝑺𝑷𝑴𝑺 𝑨𝒅𝒎𝒊𝒏
-
+SPMS Admin
 ----------------------------------------------------------------------------
-𝑻𝒉𝒊𝒔 𝒊𝒔 𝒄𝒐𝒎𝒑𝒖𝒕𝒆𝒓 𝒈𝒆𝒏𝒆𝒓𝒂𝒕𝒆𝒅 𝒆𝒎𝒂𝒊𝒍, 𝒑𝒍𝒆𝒂𝒔𝒆 𝒅𝒐 𝒏𝒐𝒕 𝒓𝒆𝒑𝒍𝒚
-
-
+This is a computer generated email, please do not reply.
                 """.strip())
 
                 # Send email
@@ -326,7 +335,7 @@ Your Password: {recovered_pass}
                     smtp.login(sender_email, sender_pass)
                     smtp.send_message(msg)
 
-                messagebox.showinfo("Success", f"Password sent successfully to {student_email}!")
+                messagebox.showinfo("Success", f"Temporary password sent successfully to {student_email}!")
 
             except Exception as e:
                 messagebox.showerror("Email Error", f"Failed to send email.\n\nDetails: {e}")
@@ -366,6 +375,7 @@ def std_dashboard():
         sec_ind.config(bg="#153C50")
         edit_data_btn_ind.config(bg="#153C50")
         del_acc_btn_ind.config(bg="#153C50")
+        change_pass_ind.config(bg="#153C50")
 
         indicator.config(bg="#c3c3c3")
 
@@ -416,8 +426,13 @@ def std_dashboard():
     del_acc_btn_ind = Label(side_bar, bg="#153C50")
     del_acc_btn_ind.place(x=10, y=247, width=3, height=37)
 
+    change_pass_btn = Button(side_bar, text="Change Password", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=change_pass_ind, page=change_pass_page))
+    change_pass_btn.place(x=20, y=300)
+    change_pass_ind = Label(side_bar, bg="#153C50")
+    change_pass_ind.place(x=10, y=297, width=3, height=37)
+
     logout_btn = Button(side_bar, text="Logout", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0)
-    logout_btn.place(x=20, y=300)
+    logout_btn.place(x=20, y=350)
 #Pages Frame
 
     def home_page():
@@ -451,12 +466,108 @@ def std_dashboard():
     def del_acc_page():
         del_acc_page_fm = Frame(pages_fm)
         del_acc_page_fm.pack(fill=BOTH, expand=True)
-
         del_acc_page_lb = Label(del_acc_page_fm, text='Delete Account Page', font=('Arial Bold', 15))
         del_acc_page_lb.place(x=100, y=100)
 
+    def change_pass_page():
+        change_pass_fm = Frame(pages_fm)
+        change_pass_fm.pack(fill=BOTH, expand=True)
+        change_pass_fm.configure(bg=bg_color)
 
+        Label(change_pass_fm, text="Change Password", font=("Arial Bold", 16), bg=bg_color, fg="white").pack(pady=10)
 
+        # Current Password
+        Label(change_pass_fm, text="Current Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=15)
+        current_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        current_pass_ent.place(x=30, y=45)
+        def toggle_current_pass():
+            if current_pass_ent['show'] == '*':
+                current_pass_ent.config(show='')
+                show_current_icon.config(image=open_eye)
+            else:
+                current_pass_ent.config(show='*')
+                show_current_icon.config(image=close_eye)
+        show_current_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_current_pass)
+        show_current_icon.place(x=320, y=45, width=28, height=28)
+
+        # New Password
+        Label(change_pass_fm, text="New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=75)
+        new_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        new_pass_ent.place(x=30, y=105)
+        def toggle_new_pass():
+            if new_pass_ent['show'] == '*':
+                new_pass_ent.config(show='')
+                show_new_icon.config(image=open_eye)
+            else:
+                new_pass_ent.config(show='*')
+                show_new_icon.config(image=close_eye)
+        show_new_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_new_pass)
+        show_new_icon.place(x=320, y=105, width=28, height=28)
+
+        # Confirm New Password
+        Label(change_pass_fm, text="Confirm New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=135)
+        confirm_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        confirm_pass_ent.place(x=30, y=165)
+        def toggle_confirm_pass():
+            if confirm_pass_ent['show'] == '*':
+                confirm_pass_ent.config(show='')
+                show_confirm_icon.config(image=open_eye)
+            else:
+                confirm_pass_ent.config(show='*')
+                show_confirm_icon.config(image=close_eye)
+        show_confirm_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_confirm_pass)
+        show_confirm_icon.place(x=320, y=165, width=28, height=28)
+
+        def update_password():
+            current_pass = current_pass_ent.get()
+            new_pass = new_pass_ent.get()
+            confirm_pass = confirm_pass_ent.get()
+
+            # Get logged-in user ID (assume stored in app.user_id)
+            user_id = getattr(app, 'user_id', None)
+            if not user_id:
+                messagebox.showerror("Error", "User ID not found. Please log in again.")
+                return
+
+            if not current_pass or not new_pass or not confirm_pass:
+                messagebox.showwarning("Input Error", "Please fill out all fields.")
+                return
+            if new_pass != confirm_pass:
+                messagebox.showerror("Error", "New passwords do not match.")
+                return
+            if len(new_pass) < 6:
+                messagebox.showerror("Error", "New password must be at least 6 characters.")
+                return
+
+            # Fetch current hashed password from DB
+            conn = sql.connect("students_acc.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT password FROM students WHERE idnum=?", (user_id,))
+            result = cursor.fetchone()
+            if not result:
+                conn.close()
+                messagebox.showerror("Error", "User not found.")
+                return
+            hashed = result[0]
+            # bcrypt expects bytes
+            if isinstance(hashed, str):
+                hashed = hashed.encode('utf-8')
+            if not bcrypt.checkpw(current_pass.encode('utf-8'), hashed):
+                conn.close()
+                messagebox.showerror("Error", "Current password is incorrect.")
+                return
+
+            # Hash new password and update
+            new_hashed = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
+            cursor.execute("UPDATE students SET password=? WHERE idnum=?", (new_hashed, user_id))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", "Password updated successfully!")
+            current_pass_ent.delete(0, END)
+            new_pass_ent.delete(0, END)
+            confirm_pass_ent.delete(0, END)
+
+        Button(change_pass_fm, text="Update Password", font=("Calibri Bold", 13), bg="#153C50", fg="white", command=update_password).place(x=30, y=205, width=200, height=35)
 
     pages_fm = Frame(dashboard_fm)
     pages_fm.place(x=155, y=2, width=380, height=580)
@@ -496,6 +607,11 @@ def student_login_page():
             verify_pass = check_valid_pass(idnum=std_id_ent.get(), password=std_pass_ent.get())
             if verify_pass:
                 print("Password is correct")
+                # Store user ID for session
+                app.user_id = std_id_ent.get()
+                std_login_page_fm.destroy()
+                app.update()
+                std_dashboard()
             else:
                 print("Password is incorrect")
                 messagebox.showerror('Invalid Password', 'Please input  a valid password.')
@@ -644,13 +760,19 @@ def check_valid_pass(idnum, password):
     conn = sql.connect("students_acc.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT idnum, password FROM students WHERE idnum=? AND password=?",(idnum, password))
+    cursor.execute("SELECT password FROM students WHERE idnum=?", (idnum,))
     result = cursor.fetchone()
-
     cursor.close()
 
     if result:
-        return True
+        hashed = result[0]
+        # bcrypt expects bytes
+        if isinstance(hashed, str):
+            hashed = hashed.encode('utf-8')
+        if bcrypt.checkpw(password.encode('utf-8'), hashed):
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -935,7 +1057,10 @@ def add_profile_page():
 
     divider = Frame(add_profile_fm, bg='grey', height=550)
     divider.place(x=220, y=20, width=2)
-# forget_pass_page()
-std_dashboard()
 
+
+
+# forget_pass_page()
+# std_dashboard()
+welcome_page()
 app.mainloop()
