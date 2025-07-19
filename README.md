@@ -47,6 +47,15 @@ This project is a practical exercise to:
 
 Inspired by [Tkinter Hub](https://www.youtube.com/@tkinterhub), which offers great tutorials on crafting rich GUIs in Python.
 
+>Icons Credits:
+Info icon by Vectoricons - https://www.flaticon.com/free-icons/info
+Add & Admin icons by Freepik - https://www.flaticon.com/free-icons/add
+Eye icon by Gregor Cresnar - https://www.flaticon.com/free-icons/eye
+Hide icon by The Icon Tree - https://www.flaticon.com/free-icons/hide
+User icon by kmg design - https://www.flaticon.com/free-icons/user
+Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/account-management
+                                   
+
 ---
 
 ## 📂 Getting Started
