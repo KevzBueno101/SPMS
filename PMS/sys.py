@@ -4,9 +4,10 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import asksaveasfilename
-from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps  # type: ignore
+from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps 
 import random
 import os
+from io import BytesIO
 import win32api
 import smtplib
 from email.message import EmailMessage
@@ -106,8 +107,6 @@ def add_data(idnum, password, name, age, gender, contact_num, yr_lvl, blk, email
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
     finally:
         conn.close()
-
-
 #Draw std card
 def draw_std_card(pic, std_data):
     labels = """
@@ -206,7 +205,6 @@ User icon by kmg design - https://www.flaticon.com/free-icons/user
 Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/account-management
                                        """)
 
- 
     ##Link to other pages
     def link_to_std_login_pg():
         wc_page.destroy()
@@ -220,6 +218,10 @@ Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/accou
         wc_page.destroy()
         app.update()
         add_profile_page()
+    
+    
+    def logout(logout_btn):
+        wc_page()
 
 
   
@@ -262,7 +264,19 @@ Account management icon by Dewi Sari - https://www.flaticon.com/free-icons/accou
 
 
 
+#fetch data in dashboard-home
+def fetch_std_data(query, params = None):
+    connection = sql.connect('students_acc.db')
+    cursor = connection.cursor()
 
+    cursor.execute(query, params)
+
+
+    connection.commit()
+    response = cursor.fetchall()
+    connection.close()
+
+    return response
 
 # Forget Password Page
 def forget_pass_page():
@@ -341,7 +355,7 @@ This is a computer generated email, please do not reply.
                 messagebox.showerror("Email Error", f"Failed to send email.\n\nDetails: {e}")
         else:
             messagebox.showerror('Try again', 'Invalid ID number!')
-    # UI elements should be placed here (like std_id_ent)
+  
 
 
     forget_pass_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
@@ -367,14 +381,41 @@ This is a computer generated email, please do not reply.
     next_btn.place(x=90, y=180)
 
 #Student Dashboard
-def std_dashboard():
+#Student Dashboard
+def std_dashboard(idnum):
 
+    get_std_details = fetch_std_data("""
+    SELECT name, age, gender, contact_num, yr_lvl, blk, email FROM students WHERE idnum = ?
+""", (idnum,))
+    print(get_std_details)
+
+    get_std_img = fetch_std_data("""
+                                 SELECT image FROM students WHERE idnum = ?""", (idnum,))
+    std_pic = BytesIO(get_std_img[0][0])
+    print(std_pic)
+    print(get_std_img)
+    
+    #Dashboard - CREATE THIS FIRST!
+    dashboard_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
+    dashboard_fm.pack(padx=3, pady=3)
+    dashboard_fm.pack_propagate(False)
+    dashboard_fm.configure(width=550, height=600)
+
+    #Side Bar
+    side_bar = Frame(dashboard_fm, bg="#153C50", width=150, height=599, highlightbackground=bg_color, highlightthickness=3)
+    side_bar.place(x=0, y=0)
+    
+    #Pages Frame - CREATE THIS BEFORE DEFINING home_page()
+    pages_fm = Frame(dashboard_fm)
+    pages_fm.place(x=155, y=2, width=380, height=580)
+    
+    # NOW define the switch function
     def switch(indicator, page):
         home_ind.config(bg="#153C50")
         std_card_ind.config(bg="#153C50")
         sec_ind.config(bg="#153C50")
         edit_data_btn_ind.config(bg="#153C50")
-        del_acc_btn_ind.config(bg="#153C50")
+        del_acc_btn_ind.config(bg="#153C50") 
         change_pass_ind.config(bg="#153C50")
 
         indicator.config(bg="#c3c3c3")
@@ -385,21 +426,11 @@ def std_dashboard():
 
         page()
 
-#Dashboard
-    dashboard_fm = Frame(app, highlightbackground=bg_color, highlightthickness=3)
-    dashboard_fm.pack(padx=3, pady=3)
-    dashboard_fm.pack_propagate(False)
-    dashboard_fm.configure(width=550, height=600)
-
-#Side Bar
-    side_bar = Frame(dashboard_fm, bg="#153C50", width=150, height=599, highlightbackground=bg_color, highlightthickness=3)
-    side_bar.place(x=0, y=0)
-#Options
+    #Options/Buttons
     home_btn = Button(side_bar, text="Home", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=home_ind, page=home_page))
     home_btn.place(x=20, y=50)
 
-    home_ind = Label(side_bar, bg="#c3c3c3"
-                     )
+    home_ind = Label(side_bar, bg="#c3c3c3")
     home_ind.place(x=10, y=47, width=3, height=37)
 
     std_card_btn = Button(side_bar, text="Student Card", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: switch(indicator=std_card_ind, page=std_card_page))
@@ -431,16 +462,40 @@ def std_dashboard():
     change_pass_ind = Label(side_bar, bg="#153C50")
     change_pass_ind.place(x=10, y=297, width=3, height=37)
 
-    logout_btn = Button(side_bar, text="Logout", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0)
+    logout_btn = Button(side_bar, text="Logout", fg='#c3c3c3', font=("Calibri", 13), bg="#153C50",bd=0, command=lambda: [dashboard_fm.destroy(), app.update(), welcome_page()])
     logout_btn.place(x=20, y=350)
-#Pages Frame
+
+    #-------------Pages Frame Functions
 
     def home_page():
+        # Create the frame FIRST
         home_page_fm = Frame(pages_fm)
         home_page_fm.pack(fill=BOTH, expand=True)
+        
+        # Process the image
+        std_pic_img_obj = Image.open(std_pic)
+        size = 100
+        
+        # Create circular mask
+        mask = Image.new(mode='L', size=(size, size), color=0)
+        draw_circle = ImageDraw.Draw(im=mask)
+        draw_circle.ellipse(xy=(0, 0, size, size), fill=255)
 
-        home_page_lb = Label(home_page_fm, text='Home Page', font=('Arial Bold', 15))
-        home_page_lb.place(x=100, y=100)
+        # Fit and convert image
+        output = ImageOps.fit(image=std_pic_img_obj, size=(size, size), centering=(0.5, 0.5))
+        output = output.convert('RGBA')
+        output.putalpha(mask)
+        
+        student_pic = ImageTk.PhotoImage(output)
+        
+        # Display the circular profile picture
+        home_page_img_lb = Label(home_page_fm, image=student_pic, bg='white')
+        home_page_img_lb.image = student_pic  # Keep reference
+        home_page_img_lb.place(x=30, y=25)
+        
+        # Display details
+        hi_lb = Label(home_page_fm, text=f'Hi! {get_std_details[0][0]}', font=('Bold', 15))
+        hi_lb.place(x=140, y=50)
 
     def std_card_page():
         std_card_page_fm = Frame(pages_fm)
@@ -474,11 +529,9 @@ def std_dashboard():
         change_pass_fm.pack(fill=BOTH, expand=True)
         change_pass_fm.configure(bg=bg_color)
 
-        Label(change_pass_fm, text="Change Password", font=("Arial Bold", 16), bg=bg_color, fg="white").pack(pady=10)
-
         # Current Password
         Label(change_pass_fm, text="Current Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=15)
-        current_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        current_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
         current_pass_ent.place(x=30, y=45)
         def toggle_current_pass():
             if current_pass_ent['show'] == '*':
@@ -488,11 +541,11 @@ def std_dashboard():
                 current_pass_ent.config(show='*')
                 show_current_icon.config(image=close_eye)
         show_current_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_current_pass)
-        show_current_icon.place(x=320, y=45, width=28, height=28)
+        show_current_icon.place(x=320, y=45, width=28, height=24)
 
         # New Password
         Label(change_pass_fm, text="New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=75)
-        new_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        new_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
         new_pass_ent.place(x=30, y=105)
         def toggle_new_pass():
             if new_pass_ent['show'] == '*':
@@ -502,11 +555,11 @@ def std_dashboard():
                 new_pass_ent.config(show='*')
                 show_new_icon.config(image=close_eye)
         show_new_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_new_pass)
-        show_new_icon.place(x=320, y=105, width=28, height=28)
+        show_new_icon.place(x=320, y=105, width=28, height=24)
 
         # Confirm New Password
         Label(change_pass_fm, text="Confirm New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=135)
-        confirm_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=30)
+        confirm_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
         confirm_pass_ent.place(x=30, y=165)
         def toggle_confirm_pass():
             if confirm_pass_ent['show'] == '*':
@@ -516,7 +569,133 @@ def std_dashboard():
                 confirm_pass_ent.config(show='*')
                 show_confirm_icon.config(image=close_eye)
         show_confirm_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_confirm_pass)
-        show_confirm_icon.place(x=320, y=165, width=28, height=28)
+        show_confirm_icon.place(x=320, y=165, width=28, height=24)
+
+        def update_password():
+            current_pass = current_pass_ent.get()
+            new_pass = new_pass_ent.get()
+            confirm_pass = confirm_pass_ent.get()
+
+            user_id = getattr(app, 'user_id', None)
+            if not user_id:
+                messagebox.showerror("Error", "User ID not found. Please log in again.")
+                return
+
+            if not current_pass or not new_pass or not confirm_pass:
+                messagebox.showwarning("Input Error", "Please fill out all fields.")
+                return
+            if new_pass != confirm_pass:
+                messagebox.showerror("Error", "New passwords do not match.")
+                return
+            if len(new_pass) < 6:
+                messagebox.showerror("Error", "New password must be at least 6 characters.")
+                return
+
+            conn = sql.connect("students_acc.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT password FROM students WHERE idnum=?", (user_id,))
+            result = cursor.fetchone()
+            if not result:
+                conn.close()
+                messagebox.showerror("Error", "User not found.")
+                return
+            hashed = result[0]
+            if isinstance(hashed, str):
+                hashed = hashed.encode('utf-8')
+            if not bcrypt.checkpw(current_pass.encode('utf-8'), hashed):
+                conn.close()
+                messagebox.showerror("Error", "Current password is incorrect.")
+                return
+
+            new_hashed = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
+            cursor.execute("UPDATE students SET password=? WHERE idnum=?", (new_hashed, user_id))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", "Password updated successfully!")
+            current_pass_ent.delete(0, END)
+            new_pass_ent.delete(0, END)
+            confirm_pass_ent.delete(0, END)
+
+        Button(change_pass_fm, text="Update Password", font=("Calibri Bold", 13), bg="#153C50", fg="white", command=update_password).place(x=30, y=205, width=200, height=35)
+
+    # Call home_page to display it initially
+    home_page()
+
+
+
+    def std_card_page():
+        std_card_page_fm = Frame(pages_fm)
+        std_card_page_fm.pack(fill=BOTH, expand=True)
+
+        std_card_page_lb = Label(std_card_page_fm, text='Student Card Page', font=('Arial Bold', 15))
+        std_card_page_lb.place(x=100, y=100)
+
+    def sec_page():
+        sec_page_fm = Frame(pages_fm)
+        sec_page_fm.pack(fill=BOTH, expand=True)
+
+        sec_page_lb = Label(sec_page_fm, text='Security Page', font=('Arial Bold', 15))
+        sec_page_lb.place(x=100, y=100)
+    
+    def edit_page():
+        edit_page_fm = Frame(pages_fm)
+        edit_page_fm.pack(fill=BOTH, expand=True)
+
+        edit_page_lb = Label(edit_page_fm, text='Edit Data Page', font=('Arial Bold', 15))
+        edit_page_lb.place(x=100, y=100)
+
+    def del_acc_page():
+        del_acc_page_fm = Frame(pages_fm)
+        del_acc_page_fm.pack(fill=BOTH, expand=True)
+        del_acc_page_lb = Label(del_acc_page_fm, text='Delete Account Page', font=('Arial Bold', 15))
+        del_acc_page_lb.place(x=100, y=100)
+
+    def change_pass_page():
+        change_pass_fm = Frame(pages_fm)
+        change_pass_fm.pack(fill=BOTH, expand=True)
+        change_pass_fm.configure(bg=bg_color)
+
+        # Current Password
+        Label(change_pass_fm, text="Current Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=15)
+        current_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
+        current_pass_ent.place(x=30, y=45)
+        def toggle_current_pass():
+            if current_pass_ent['show'] == '*':
+                current_pass_ent.config(show='')
+                show_current_icon.config(image=open_eye)
+            else:
+                current_pass_ent.config(show='*')
+                show_current_icon.config(image=close_eye)
+        show_current_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_current_pass)
+        show_current_icon.place(x=320, y=45, width=28, height=24)
+
+        # New Password
+        Label(change_pass_fm, text="New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=75)
+        new_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
+        new_pass_ent.place(x=30, y=105)
+        def toggle_new_pass():
+            if new_pass_ent['show'] == '*':
+                new_pass_ent.config(show='')
+                show_new_icon.config(image=open_eye)
+            else:
+                new_pass_ent.config(show='*')
+                show_new_icon.config(image=close_eye)
+        show_new_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_new_pass)
+        show_new_icon.place(x=320, y=105, width=28, height=24)
+
+        # Confirm New Password
+        Label(change_pass_fm, text="Confirm New Password:", font=("Calibri", 13), bg=bg_color, fg="white").place(x=30, y=135)
+        confirm_pass_ent = Entry(change_pass_fm, show="*", font=("Calibri", 12), width=37)
+        confirm_pass_ent.place(x=30, y=165)
+        def toggle_confirm_pass():
+            if confirm_pass_ent['show'] == '*':
+                confirm_pass_ent.config(show='')
+                show_confirm_icon.config(image=open_eye)
+            else:
+                confirm_pass_ent.config(show='*')
+                show_confirm_icon.config(image=close_eye)
+        show_confirm_icon = Button(change_pass_fm, image=close_eye, border=0, command=toggle_confirm_pass)
+        show_confirm_icon.place(x=320, y=165, width=28, height=24)
 
         def update_password():
             current_pass = current_pass_ent.get()
@@ -572,13 +751,6 @@ def std_dashboard():
     pages_fm = Frame(dashboard_fm)
     pages_fm.place(x=155, y=2, width=380, height=580)
     
-   
-
-
-
-
-
-
 #Student Login
 def student_login_page():
 
@@ -587,8 +759,6 @@ def student_login_page():
         std_login_page_fm.destroy()
         app.update()
         welcome_page()
-
-
 
     def show_hidden_pass():
         if std_pass_ent['show'] == "*":
@@ -600,25 +770,31 @@ def student_login_page():
 
     #Login Account\
     def login_acc():
-        verifu_idnum = check_idnum_exist(idnum= std_id_ent.get())
-        if verifu_idnum:
+        verify_idnum = check_idnum_exist(idnum= std_id_ent.get())
+        if verify_idnum:
             print('ID # is correct')
 
             verify_pass = check_valid_pass(idnum=std_id_ent.get(), password=std_pass_ent.get())
             if verify_pass:
                 print("Password is correct")
+                # ✅ Store the ID BEFORE destroying the frame
+                student_id = std_id_ent.get()
+                
                 # Store user ID for session
-                app.user_id = std_id_ent.get()
+                app.user_id = student_id
+                
+                # Now destroy the frame
                 std_login_page_fm.destroy()
                 app.update()
-                std_dashboard()
+                
+                # ✅ Use the stored variable
+                std_dashboard(student_id)
             else:
                 print("Password is incorrect")
                 messagebox.showerror('Invalid Password', 'Please input  a valid password.')
         else:
             print("ID is incorrect")
             messagebox.showerror('Invalid', 'Please input  a valid ID number.')
-
 
 
     #Login page
@@ -673,8 +849,8 @@ def student_login_page():
     back.place(x=3, y=40)
 
 
-def admin_login_page():
 
+def admin_login_page():
     #back arrow
     def back_arrow():
         adm_login_page_fm.destroy()
@@ -1058,9 +1234,8 @@ def add_profile_page():
     divider = Frame(add_profile_fm, bg='grey', height=550)
     divider.place(x=220, y=20, width=2)
 
-
-
 # forget_pass_page()
 # std_dashboard()
-welcome_page()
+# welcome_page()
+std_dashboard(idnum=17382)
 app.mainloop()
